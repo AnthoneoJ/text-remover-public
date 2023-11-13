@@ -1,6 +1,7 @@
-VERSION = '1.1'
+VERSION = '1.2'
 """
-- Added input subfolders handling
+- Added image format param
+- Added option to replace input with output
 
 An application to automatically remove texts from images.
 Forked from https://github.com/liawifelix/auto-text-removal/
@@ -22,6 +23,7 @@ pip install "git+https://github.com/facebookresearch/detectron2.git"
 5. Run
 """
 import os, sys, shutil, requests, zipfile, re
+from PIL import Image
 
 from tqdm import tqdm
 import gdown
@@ -48,9 +50,10 @@ BIG_LAMA_DIR = os.path.abspath('lama/big-lama')
 INPUT_DIR = os.path.abspath('images')
 ITER = 3
 
-# regex pattern of image filenames to include/exclude
-INCLUDE_PATTERN = None
+INCLUDE_PATTERN = None # regex pattern of image filenames to include/exclude
 EXCLUDE_PATTERN = r'original'
+IMG_EXT = '.jpg' # desired image format
+REPLACE_INPUT = True
 
 input_path = os.path.abspath('input_images')
 detection_path = os.path.abspath('detection_results')
@@ -118,13 +121,17 @@ def save_output(source_dir: str, dest_dir: str):
                        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp'))]
     output_filenames = []
     for filename in image_filenames:
-        fname = filename.split('.', 1)
-        ext = fname[-1]
-        output_filenames.append(fname[0]+'_output'+'.'+ext)
+        fname,ext = os.path.splitext(filename)
+        if REPLACE_INPUT:
+            fname = fname.replace('_mask','')
+        else:
+            fname = fname + '_output'
+        output_filenames.append(fname + IMG_EXT)
     for source_filename,dest_filename in zip(image_filenames,output_filenames):
         source_path = os.path.join(source_dir, source_filename)
         destination_path = os.path.join(dest_dir, dest_filename)
-        shutil.copy2(source_path, destination_path)
+        source_image = Image.open(source_path)
+        source_image.save(destination_path)
 
 if __name__=='__main__':
     craft_model_url = 'https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ'
