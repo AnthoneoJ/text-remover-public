@@ -3,6 +3,7 @@ detection_results/
 each_step_results/
 outputs/
 results/
+input_images/
 lama/big-lama
 
 craft_pytorch/craft_mlt_25k.pth
